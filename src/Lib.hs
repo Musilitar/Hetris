@@ -9,7 +9,7 @@ type Resolution = (Int, Int)
 
 type Position = (Int, Int)
 
-type Well = Map.Map Position Bool
+type Well = Map.Map Position GLS.Color
 
 data Display
   = FullScreen
@@ -29,12 +29,11 @@ data PiecePreview
 data Piece =
   Piece [Position]
         GLS.Color
-  deriving (Show)
 
 data Options = Options
   { display :: Display
-  , cellsHorizontal :: Int
-  , cellsVertical :: Int
+  , rows :: Int
+  , columns :: Int
   , showShadow :: Bool
   , allowInstantDrop :: Bool
   , allowPieceSlide :: Bool
@@ -54,8 +53,8 @@ defaultOptions :: Options
 defaultOptions =
   Options
     { display = WindowedExact (1280, 720)
-    , cellsHorizontal = 10
-    , cellsVertical = 20
+    , rows = 20
+    , columns = 10
     , showShadow = True
     , allowInstantDrop = True
     , allowPieceSlide = True
@@ -64,34 +63,53 @@ defaultOptions =
     , piecePicker = BagRandom
     }
 
+emptyWell :: Options -> Well
+emptyWell options = Map.fromList keyValues
+  where
+    currentRows = rows options - 1
+    currentColumns = columns options - 1
+    rowsRange = [0 .. currentRows]
+    columnsRange = [0 .. currentColumns]
+    keys =
+      map (\row -> map (\column -> (column, row)) columnsRange) rowsRange &
+      concat
+    keyValues = map (\position -> (position, GLS.red)) keys
+
 initialState :: State
 initialState =
   State
     { resolution = (1280, 720)
     , options = defaultOptions
     , score = 0
-    , well = Map.empty
+    , well = emptyWell defaultOptions
     }
 
 updateState :: Float -> State -> State
 updateState time state = state
 
-drawRectangle :: Float -> Float -> GLS.Color -> GLS.Picture
-drawRectangle width height color =
-  GLS.rectangleSolid width height & GLS.color color
+drawRectangle :: Float -> Float -> Float -> Float -> GLS.Color -> GLS.Picture
+drawRectangle width height offsetX offsetY color =
+  GLS.rectangleSolid width height & GLS.color color &
+  GLS.translate offsetX offsetY
+
+renderCell :: Position -> GLS.Color -> Float -> GLS.Picture
+renderCell position color size = drawRectangle size size 0 0 color
+
+renderWell :: Well -> Float -> GLS.Picture
+renderWell well cellSize = drawRectangle cellSize cellSize 0 0 GLS.white
 
 render :: State -> GLS.Picture
-render state = GLS.pictures [well]
+render state = GLS.pictures [wellBackground]
   where
-    well = drawRectangle wellWidth wellHeight GLS.white
+    wellBackground = drawRectangle wellWidth wellHeight 0 0 GLS.white
       where
         currentResolution = resolution state
         currentOptions = options state
         resolutionHorizontal = fst currentResolution & realToFrac
         resolutionVertical = snd currentResolution & realToFrac
-        cellSize = wellHeight / (cellsVertical currentOptions & realToFrac)
-        wellWidth = cellSize * (cellsHorizontal currentOptions & realToFrac)
-        wellHeight = resolutionVertical * 0.8
+        cellSize = wellHeight / (rows currentOptions & realToFrac)
+        wellWidth = cellSize * (columns currentOptions & realToFrac)
+        wellHeight = resolutionVertical * 0.9
 
 handleEvent :: GLS.Event -> State -> State
 handleEvent _ state = state
