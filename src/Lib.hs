@@ -1,29 +1,61 @@
-module Lib
-     where
+module Lib where
 
+import Data.Function ((&))
+import qualified Data.Map.Strict as Map
 import qualified Graphics.Gloss as GLS
+import qualified Graphics.Gloss.Interface.Pure.Game as GLS
 
-data Resolution = FullScreen | WindowedMax | WindowedExact (Int, Int)
-data PiecePicker = TrueRandom | BagRandom
-data PiecePreview = NoPreview | PreviewOne | PreviewTwo | PreviewThree
-data Piece = Piece [(Int, Int)] GLS.Color deriving (Show)
+type Resolution = (Int, Int)
+
+type Position = (Int, Int)
+
+type Well = Map.Map Position Bool
+
+data Display
+  = FullScreen
+  | WindowedMax
+  | WindowedExact Resolution
+
+data PiecePicker
+  = TrueRandom
+  | BagRandom
+
+data PiecePreview
+  = NoPreview
+  | PreviewOne
+  | PreviewTwo
+  | PreviewThree
+
+data Piece =
+  Piece [Position]
+        GLS.Color
+  deriving (Show)
+
 data Options = Options
-    { resolution       :: Resolution
-    , wellWidth        :: Int
-    , wellHeight       :: Int
-    , showShadow       :: Bool
-    , allowInstantDrop :: Bool
-    , allowPieceSlide  :: Bool
-    , allowPieceHold   :: Bool
-    , piecePreview     :: PiecePreview
-    , piecePicker      :: PiecePicker
-    }
+  { display :: Display
+  , cellsHorizontal :: Int
+  , cellsVertical :: Int
+  , showShadow :: Bool
+  , allowInstantDrop :: Bool
+  , allowPieceSlide :: Bool
+  , allowPieceHold :: Bool
+  , piecePreview :: PiecePreview
+  , piecePicker :: PiecePicker
+  }
+
+data State = State
+  { resolution :: Resolution
+  , options :: Options
+  , score :: Int
+  , well :: Well
+  }
 
 defaultOptions :: Options
-defaultOptions = Options
-    { resolution = WindowedExact (1280, 720)
-    , wellWidth = 10
-    , wellHeight = 20
+defaultOptions =
+  Options
+    { display = WindowedExact (1280, 720)
+    , cellsHorizontal = 10
+    , cellsVertical = 20
     , showShadow = True
     , allowInstantDrop = True
     , allowPieceSlide = True
@@ -31,6 +63,38 @@ defaultOptions = Options
     , piecePreview = PreviewOne
     , piecePicker = BagRandom
     }
+
+initialState :: State
+initialState =
+  State
+    { resolution = (1280, 720)
+    , options = defaultOptions
+    , score = 0
+    , well = Map.empty
+    }
+
+updateState :: Float -> State -> State
+updateState time state = state
+
+drawRectangle :: Float -> Float -> GLS.Color -> GLS.Picture
+drawRectangle width height color =
+  GLS.rectangleSolid width height & GLS.color color
+
+render :: State -> GLS.Picture
+render state = GLS.pictures [well]
+  where
+    well = drawRectangle wellWidth wellHeight GLS.white
+      where
+        currentResolution = resolution state
+        currentOptions = options state
+        resolutionHorizontal = fst currentResolution & realToFrac
+        resolutionVertical = snd currentResolution & realToFrac
+        cellSize = wellHeight / (cellsVertical currentOptions & realToFrac)
+        wellWidth = cellSize * (cellsHorizontal currentOptions & realToFrac)
+        wellHeight = resolutionVertical * 0.8
+
+handleEvent :: GLS.Event -> State -> State
+handleEvent _ state = state
 
 tetrominoI :: Piece
 tetrominoI = Piece [(0, 0), (1, 0), (2, 0), (3, 0)] GLS.cyan
