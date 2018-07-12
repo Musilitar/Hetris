@@ -17,9 +17,6 @@ window options = case display options of
 background :: GLS.Color
 background = GLS.black
 
-fps :: Int
-fps = 60
-
 main :: IO ()
 main = do
   randomGenerator <- Random.newStdGen

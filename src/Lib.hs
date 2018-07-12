@@ -21,7 +21,7 @@ data Display
   | WindowedMax
   | WindowedExact Resolution
 
-data GameState = NotStarted | Playing | Paused
+data GameState = NotStarted | Playing | Paused | GameOver
 
 data PiecePicker
   = TrueRandom
@@ -59,11 +59,16 @@ data State = State
   , time :: Float
   , deltaTime :: Float
   , secondsToNextMove :: Float
-  , gravity :: Int -- cells/second
+  , gravity :: Float -- cells/second
+
+  , applyExtraGravity :: Bool
   , gameState :: GameState
-  , currentPiece :: Piece
-  , currentPosition :: Position
+  , piece :: Piece
+  , piecePosition :: Position
   }
+
+fps :: Int
+fps = 60
 
 defaultOptions :: Options
 defaultOptions = Options
@@ -99,42 +104,93 @@ initialState randomGenerator = State
   , time              = 0
   , deltaTime         = 0
   , secondsToNextMove = 0
-  , gravity           = 1
+  , gravity           = 1.0
+  , applyExtraGravity = False
   , gameState         = NotStarted
-  , currentPiece      = tetrominoL
-  , currentPosition   = (0, 0)
+  , piece             = tetrominoL
+  , piecePosition     = (0, 0)
   }
 
 handleFrame :: Float -> State -> State
-handleFrame newTime state = advanceState newState
+handleFrame newTime state = case gameState state of
+  Playing -> advanceState newState
+  _       -> state
  where
   newState = state { time              = (time state + newTime)
                    , deltaTime         = newTime
                    , secondsToNextMove = (secondsToNextMove state - newTime)
                    }
 
-advanceState :: State -> State
-advanceState state | secondsToNextMove state <= 0 = state
-                   | otherwise                    = state
-
-canPieceMoveTo :: Piece -> Position -> Well -> Bool
-canPieceMoveTo piece position well = True
-
-movePiece :: State -> State
-movePiece state | isNewPositionValid = state
-                | otherwise          = state
+actualGravity :: State -> Float
+actualGravity state
+  | applyExtraGravity state = if options state & allowInstantDrop then instantDrop else fastDrop
+  | otherwise               = gravity state
  where
-  newPosition        = (fst (currentPosition state), snd (currentPosition state) - 1)
-  isNewPositionValid = True
+  instantDrop = realToFrac fps
+  fastDrop    = instantDrop / 2.0
+
+
+actualCellsPerSecond :: State -> Float
+actualCellsPerSecond state = 1.0 / actualGravity state
+
+advanceState :: State -> State
+advanceState state
+  | secondsToNextMove state <= 0 = applyGravity newState
+    { secondsToNextMove = actualCellsPerSecond state
+    }
+  | otherwise = newState
+  where newState = state { secondsToNextMove = (secondsToNextMove state) - (deltaTime state) }
+
+isPiecePositionValid :: Piece -> Position -> Options -> Bool
+isPiecePositionValid (Piece positions _) (wellX, wellY) options =
+  map isValidPosition positions & and
+ where
+  xMax = columns options - 1
+  yMax = rows options - 1
+  isValidPosition (pieceX, pieceY) =
+    (pieceX + wellX >= 0)
+      && (pieceX + wellX <= xMax)
+      && (pieceY + wellY >= 0)
+      && (pieceY + wellY <= yMax)
+
+canPieceMoveTo :: Piece -> Position -> Well -> Options -> Bool
+canPieceMoveTo piece position well options = isWithinWell && not isColliding
+ where
+  isWithinWell = isPiecePositionValid piece position options
+  isColliding  = False
+
+movePieceHorizontally :: Int -> State -> State
+movePieceHorizontally amountCells state | isNewPositionValid = state { piecePosition = newPosition }
+                                        | otherwise          = state
+ where
+  newPosition        = (fst (piecePosition state) + amountCells, snd (piecePosition state))
+  isNewPositionValid = canPieceMoveTo (piece state) newPosition (well state) (options state)
+
+
+applyGravity :: State -> State
+applyGravity state | isNewPositionValid = state { piecePosition = newPosition }
+                   | otherwise          = state
+ where
+  newPosition        = (fst (piecePosition state), snd (piecePosition state) - 1)
+  isNewPositionValid = canPieceMoveTo (piece state) newPosition (well state) (options state)
 
 startNewGame :: State -> State
 startNewGame state = state { randomGenerator = (snd newRandom)
-                           , currentPiece    = newPiece
-                           , currentPosition = (0, 0)
+                           , gameState       = Playing
+                           , piece           = newPiece
+                           , piecePosition   = (0, maxY)
                            }
  where
   newRandom = Random.randomR (0, 6) (randomGenerator state)
   newPiece  = randomPiece (fst newRandom)
+  maxY      = rows (options state) - 1
+
+addPieceAtPositionToWell :: Piece -> Position -> Well -> Well
+addPieceAtPositionToWell (Piece positions color) (wellX, wellY) well = Map.union newPieceWell well
+ where
+  newPieceWell =
+    map (\(pieceX, pieceY) -> ((pieceX + wellX, pieceY + wellY), color)) positions & Map.fromList
+
 
 drawRectangle :: Float -> Float -> Float -> Float -> GLS.Color -> GLS.Picture
 drawRectangle width height offsetX offsetY color =
@@ -151,7 +207,7 @@ wellPositionToPixelOffset (x, y) size wellWidth wellHeight = (offsetX, offsetY)
 renderCell :: Position -> GLS.Color -> Float -> Float -> Float -> Bool -> GLS.Picture
 renderCell position color sizeOuter wellWidth wellHeight showGrid = if showGrid
   then GLS.pictures [outerCell (GLS.greyN 0.9), innerCell]
-  else outerCell GLS.white
+  else outerCell color
  where
   outerCell outerColor = drawRectangle sizeOuter sizeOuter offsetX offsetY outerColor
   innerCell = drawRectangle sizeInner sizeInner offsetX offsetY color
@@ -172,10 +228,16 @@ renderWell well cellSize wellWidth wellHeight showGrid =
     & GLS.pictures
 
 render :: State -> GLS.Picture
-render state = GLS.pictures [wellBorder, wellCells]
+render state = case gameState state of
+  NotStarted -> GLS.pictures [wellBorder, wellCells]
+  Playing    -> GLS.pictures [wellBorder, wellCells, activePiece]
+  Paused     -> GLS.pictures [wellBorder, wellCells, activePiece]
+  GameOver   -> GLS.pictures [wellBorder, wellCells, activePiece]
  where
   wellBorder = drawRectangle (wellWidth + border) (wellHeight + border) 0 0 (GLS.greyN 0.25)
-  wellCells = renderWell (well state) cellSize wellWidth wellHeight (showGrid currentOptions)
+  wellCells  = renderWell (well state) cellSize wellWidth wellHeight (showGrid currentOptions)
+  activePiece =
+    renderWell wellWithActivePiece cellSize wellWidth wellHeight (showGrid currentOptions)
   currentResolution    = resolution state
   currentOptions       = options state
   resolutionHorizontal = fst currentResolution & realToFrac
@@ -184,9 +246,26 @@ render state = GLS.pictures [wellBorder, wellCells]
   cellSize             = wellHeight / (rows currentOptions & realToFrac)
   wellWidth            = cellSize * (columns currentOptions & realToFrac)
   wellHeight           = resolutionVertical * 0.8
+  wellWithActivePiece =
+    addPieceAtPositionToWell (piece state) (piecePosition state) (emptyWell currentOptions)
+
+pauseOrUnpause :: State -> State
+pauseOrUnpause state = case gameState state of
+  Paused  -> state { gameState = Playing }
+  Playing -> state { gameState = Paused }
+  _       -> state
 
 handleEvent :: GLS.Event -> State -> State
-handleEvent (GLS.EventKey (GLS.Char 'n') GLS.Up _ _) state = startNewGame state
+handleEvent (GLS.EventKey (GLS.Char 'n') GLS.Down _ _) state = startNewGame state
+handleEvent (GLS.EventKey (GLS.Char 'p') GLS.Down _ _) state = pauseOrUnpause state
+handleEvent (GLS.EventKey (GLS.SpecialKey GLS.KeyRight) GLS.Down _ _) state =
+  movePieceHorizontally 1 state
+handleEvent (GLS.EventKey (GLS.SpecialKey GLS.KeyDown) GLS.Down _ _) state =
+  state { applyExtraGravity = True }
+handleEvent (GLS.EventKey (GLS.SpecialKey GLS.KeyDown) GLS.Up _ _) state =
+  state { applyExtraGravity = False }
+handleEvent (GLS.EventKey (GLS.SpecialKey GLS.KeyLeft) GLS.Down _ _) state =
+  movePieceHorizontally (-1) state
 handleEvent _ state = state
 
 randomPiece :: Int -> Piece
@@ -203,19 +282,19 @@ tetrominoI :: Piece
 tetrominoI = Piece [(0, 0), (1, 0), (2, 0), (3, 0)] GLS.cyan
 
 tetrominoJ :: Piece
-tetrominoJ = Piece [(0, 1), (1, 1), (2, 1), (2, 0)] GLS.blue
+tetrominoJ = Piece [(0, 0), (0, -1), (1, -1), (2, -1)] GLS.blue
 
 tetrominoL :: Piece
-tetrominoL = Piece [(0, 0), (0, 1), (1, 1), (2, 1)] GLS.orange
+tetrominoL = Piece [(2, 0), (0, -1), (1, -1), (2, -1)] GLS.orange
 
 tetrominoO :: Piece
-tetrominoO = Piece [(0, 0), (1, 0), (0, 1), (1, 1)] GLS.yellow
+tetrominoO = Piece [(0, 0), (1, 0), (0, -1), (1, -1)] GLS.yellow
 
 tetrominoS :: Piece
-tetrominoS = Piece [(0, 0), (1, 0), (1, 1), (2, 1)] GLS.green
+tetrominoS = Piece [(1, 0), (2, 0), (0, -1), (1, -1)] GLS.green
 
 tetrominoT :: Piece
-tetrominoT = Piece [(1, 0), (0, 1), (1, 1), (2, 1)] GLS.magenta
+tetrominoT = Piece [(1, 0), (0, -1), (1, -1), (2, -1)] GLS.magenta
 
 tetrominoZ :: Piece
-tetrominoZ = Piece [(1, 0), (2, 0), (0, 1), (1, 1)] GLS.red
+tetrominoZ = Piece [(0, 0), (1, 0), (1, -1), (2, -1)] GLS.red
