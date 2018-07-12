@@ -177,7 +177,7 @@ canPieceMoveTo piece position well options = isWithinWell && not isColliding
 
 applyGravity :: State -> State
 applyGravity state | isNewPositionValid = state { piecePosition = newPosition }
-                   | otherwise          = state
+                   | otherwise = Trace.trace (show (well (lockPiece state))) lockPiece state
  where
   newPosition        = (fst (piecePosition state), snd (piecePosition state) - 1)
   isNewPositionValid = canPieceMoveTo (piece state) newPosition (well state) (options state)
@@ -192,16 +192,28 @@ applyMovement state | isNewPositionValid = state { piecePosition = newPosition }
   newPosition        = (fst (piecePosition state) + cellsToShift, snd (piecePosition state))
   isNewPositionValid = canPieceMoveTo (piece state) newPosition (well state) (options state)
 
-startNewGame :: State -> State
-startNewGame state = state { randomGenerator = (snd newRandom)
-                           , gameState       = Playing
-                           , piece           = newPiece
-                           , piecePosition   = (0, maxY)
-                           }
+maxY :: State -> Int
+maxY state = rows (options state) - 1
+
+lockPiece :: State -> State
+lockPiece state
+  | snd (piecePosition state) > maxY state = state { gameState = GameOver }
+  | otherwise = (spawnNewPiece state)
+    { well = addPieceAtPositionToWell (piece state) (piecePosition state) (well state)
+    }
+
+spawnNewPiece :: State -> State
+spawnNewPiece state = state { randomGenerator = (snd newRandom)
+                            , piece           = newPiece
+                            , piecePosition   = (0, maxY state)
+                            }
  where
   newRandom = Random.randomR (0, 6) (randomGenerator state)
   newPiece  = randomPiece (fst newRandom)
-  maxY      = rows (options state) - 1
+
+
+startNewGame :: State -> State
+startNewGame state = (spawnNewPiece state) { gameState = Playing }
 
 addPieceAtPositionToWell :: Piece -> Position -> Well -> Well
 addPieceAtPositionToWell (Piece positions color) (wellX, wellY) well = Map.union newPieceWell well
@@ -238,12 +250,16 @@ renderWell :: Well -> Float -> Float -> Float -> Bool -> GLS.Picture
 renderWell well cellSize wellWidth wellHeight showGrid =
   Map.foldrWithKey
       (\position color pictures ->
-        renderCell position color cellSize wellWidth wellHeight showGrid : pictures
+        cellToPicture position color cellSize wellWidth wellHeight showGrid : pictures
       )
       []
       well
 
     & GLS.pictures
+ where
+  cellToPicture position color cellSize wellWidth wellHeight showGrid
+    | color == GLS.white = GLS.pictures []
+    | otherwise          = renderCell position color cellSize wellWidth wellHeight showGrid
 
 render :: State -> GLS.Picture
 render state = case gameState state of
@@ -253,7 +269,10 @@ render state = case gameState state of
   GameOver   -> GLS.pictures [wellBorder, wellCells, activePiece]
  where
   wellBorder = drawRectangle (wellWidth + border) (wellHeight + border) 0 0 (GLS.greyN 0.25)
-  wellCells  = renderWell (well state) cellSize wellWidth wellHeight (showGrid currentOptions)
+  wellCells  = GLS.pictures
+    [ drawRectangle wellWidth wellHeight 0 0 GLS.white
+    , renderWell (well state) cellSize wellWidth wellHeight (showGrid currentOptions)
+    ]
   activePiece =
     renderWell wellWithActivePiece cellSize wellWidth wellHeight (showGrid currentOptions)
   currentResolution    = resolution state
