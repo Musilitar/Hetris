@@ -58,13 +58,16 @@ data State = State
   , randomGenerator :: Random.StdGen
   , time :: Float
   , deltaTime :: Float
-  , secondsToNextMove :: Float
+  , secondsToNextGravity :: Float
+  , secondsToNextMovement :: Float
   , gravity :: Float -- cells/second
 
   , applyExtraGravity :: Bool
   , gameState :: GameState
   , piece :: Piece
   , piecePosition :: Position
+  , movePieceRight :: Bool
+  , movePieceLeft :: Bool
   }
 
 fps :: Int
@@ -96,19 +99,22 @@ emptyWell options = Map.fromList keyValues
 
 initialState :: Random.StdGen -> State
 initialState randomGenerator = State
-  { resolution        = (1280, 720)
-  , options           = defaultOptions
-  , score             = 0
-  , well              = emptyWell defaultOptions
-  , randomGenerator   = randomGenerator
-  , time              = 0
-  , deltaTime         = 0
-  , secondsToNextMove = 0
-  , gravity           = 1.0
-  , applyExtraGravity = False
-  , gameState         = NotStarted
-  , piece             = tetrominoL
-  , piecePosition     = (0, 0)
+  { resolution            = (1280, 720)
+  , options               = defaultOptions
+  , score                 = 0
+  , well                  = emptyWell defaultOptions
+  , randomGenerator       = randomGenerator
+  , time                  = 0
+  , deltaTime             = 0
+  , secondsToNextGravity  = 1
+  , secondsToNextMovement = 0
+  , gravity               = 1.0
+  , applyExtraGravity     = False
+  , gameState             = NotStarted
+  , piece                 = tetrominoL
+  , piecePosition         = (0, 0)
+  , movePieceRight        = False
+  , movePieceLeft         = False
   }
 
 handleFrame :: Float -> State -> State
@@ -116,9 +122,10 @@ handleFrame newTime state = case gameState state of
   Playing -> advanceState newState
   _       -> state
  where
-  newState = state { time              = (time state + newTime)
-                   , deltaTime         = newTime
-                   , secondsToNextMove = (secondsToNextMove state - newTime)
+  newState = state { time                  = time state + newTime
+                   , deltaTime             = newTime
+                   , secondsToNextGravity  = secondsToNextGravity state - newTime
+                   , secondsToNextMovement = secondsToNextMovement state - newTime
                    }
 
 actualGravity :: State -> Float
@@ -130,16 +137,25 @@ actualGravity state
   fastDrop    = instantDrop / 2.0
 
 
-actualCellsPerSecond :: State -> Float
-actualCellsPerSecond state = 1.0 / actualGravity state
+actualSecondsToNextGravity :: State -> Float
+actualSecondsToNextGravity state = 1.0 / actualGravity state
+
+actualSecondsToNextMovement :: Float
+actualSecondsToNextMovement = 0.25
 
 advanceState :: State -> State
 advanceState state
-  | secondsToNextMove state <= 0 = applyGravity newState
-    { secondsToNextMove = actualCellsPerSecond state
+  | secondsToNextGravity state <= 0 = applyGravity newState
+    { secondsToNextGravity = actualSecondsToNextGravity state
+    }
+  | secondsToNextMovement state <= 0 = applyMovement newState
+    { secondsToNextMovement = actualSecondsToNextMovement
     }
   | otherwise = newState
-  where newState = state { secondsToNextMove = (secondsToNextMove state) - (deltaTime state) }
+ where
+  newState = state { secondsToNextGravity  = (secondsToNextGravity state) - (deltaTime state)
+                   , secondsToNextMovement = (secondsToNextMovement state) - (deltaTime state)
+                   }
 
 isPiecePositionValid :: Piece -> Position -> Options -> Bool
 isPiecePositionValid (Piece positions _) (wellX, wellY) options =
@@ -159,19 +175,21 @@ canPieceMoveTo piece position well options = isWithinWell && not isColliding
   isWithinWell = isPiecePositionValid piece position options
   isColliding  = False
 
-movePieceHorizontally :: Int -> State -> State
-movePieceHorizontally amountCells state | isNewPositionValid = state { piecePosition = newPosition }
-                                        | otherwise          = state
- where
-  newPosition        = (fst (piecePosition state) + amountCells, snd (piecePosition state))
-  isNewPositionValid = canPieceMoveTo (piece state) newPosition (well state) (options state)
-
-
 applyGravity :: State -> State
 applyGravity state | isNewPositionValid = state { piecePosition = newPosition }
                    | otherwise          = state
  where
   newPosition        = (fst (piecePosition state), snd (piecePosition state) - 1)
+  isNewPositionValid = canPieceMoveTo (piece state) newPosition (well state) (options state)
+
+applyMovement :: State -> State
+applyMovement state | isNewPositionValid = state { piecePosition = newPosition }
+                    | otherwise          = state
+ where
+  cellsToShift = if movePieceRight state && not (movePieceLeft state)
+    then 1
+    else if movePieceLeft state && not (movePieceRight state) then -1 else 0
+  newPosition        = (fst (piecePosition state) + cellsToShift, snd (piecePosition state))
   isNewPositionValid = canPieceMoveTo (piece state) newPosition (well state) (options state)
 
 startNewGame :: State -> State
@@ -259,13 +277,17 @@ handleEvent :: GLS.Event -> State -> State
 handleEvent (GLS.EventKey (GLS.Char 'n') GLS.Down _ _) state = startNewGame state
 handleEvent (GLS.EventKey (GLS.Char 'p') GLS.Down _ _) state = pauseOrUnpause state
 handleEvent (GLS.EventKey (GLS.SpecialKey GLS.KeyRight) GLS.Down _ _) state =
-  movePieceHorizontally 1 state
+  state { movePieceRight = True }
+handleEvent (GLS.EventKey (GLS.SpecialKey GLS.KeyRight) GLS.Up _ _) state =
+  state { movePieceRight = False }
 handleEvent (GLS.EventKey (GLS.SpecialKey GLS.KeyDown) GLS.Down _ _) state =
   state { applyExtraGravity = True }
 handleEvent (GLS.EventKey (GLS.SpecialKey GLS.KeyDown) GLS.Up _ _) state =
   state { applyExtraGravity = False }
 handleEvent (GLS.EventKey (GLS.SpecialKey GLS.KeyLeft) GLS.Down _ _) state =
-  movePieceHorizontally (-1) state
+  state { movePieceLeft = True }
+handleEvent (GLS.EventKey (GLS.SpecialKey GLS.KeyLeft) GLS.Up _ _) state =
+  state { movePieceLeft = False }
 handleEvent _ state = state
 
 randomPiece :: Int -> Piece
