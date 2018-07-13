@@ -169,15 +169,22 @@ isPiecePositionValid (Piece positions _) (wellX, wellY) options =
       && (pieceY + wellY >= 0)
       && (pieceY + wellY <= yMax)
 
+isPiecePositionColliding :: Piece -> Position -> Well -> Bool
+isPiecePositionColliding piece position well = Map.size filledCells > 0
+ where
+  wellWithPiece    = pieceAtPositionToWellPart piece position
+  wellIntersection = Map.intersection well wellWithPiece
+  filledCells      = Map.filter (\color -> color /= GLS.white) wellIntersection
+
 canPieceMoveTo :: Piece -> Position -> Well -> Options -> Bool
 canPieceMoveTo piece position well options = isWithinWell && not isColliding
  where
   isWithinWell = isPiecePositionValid piece position options
-  isColliding  = False
+  isColliding  = isPiecePositionColliding piece position well
 
 applyGravity :: State -> State
 applyGravity state | isNewPositionValid = state { piecePosition = newPosition }
-                   | otherwise = Trace.trace (show (well (lockPiece state))) lockPiece state
+                   | otherwise          = lockPiece state
  where
   newPosition        = (fst (piecePosition state), snd (piecePosition state) - 1)
   isNewPositionValid = canPieceMoveTo (piece state) newPosition (well state) (options state)
@@ -219,6 +226,12 @@ addPieceAtPositionToWell :: Piece -> Position -> Well -> Well
 addPieceAtPositionToWell (Piece positions color) (wellX, wellY) well = Map.union newPieceWell well
  where
   newPieceWell =
+    map (\(pieceX, pieceY) -> ((pieceX + wellX, pieceY + wellY), color)) positions & Map.fromList
+
+pieceAtPositionToWellPart :: Piece -> Position -> Well
+pieceAtPositionToWellPart (Piece positions color) (wellX, wellY) = wellPart
+ where
+  wellPart =
     map (\(pieceX, pieceY) -> ((pieceX + wellX, pieceY + wellY), color)) positions & Map.fromList
 
 
