@@ -4,6 +4,7 @@ import           Data.Function                            ( (&) )
 import qualified Debug.Trace                   as Trace
 import qualified System.Random                 as Random
 import qualified Data.Map.Strict               as Map
+import qualified Data.Maybe as Maybe
 import qualified Graphics.Gloss                as GLS
 import qualified Graphics.Gloss.Interface.Pure.Game
                                                as GLS
@@ -184,7 +185,7 @@ canPieceMoveTo piece position well options = isWithinWell && not isColliding
 
 applyGravity :: State -> State
 applyGravity state | isNewPositionValid = state { piecePosition = newPosition }
-                   | otherwise          = lockPiece state
+                   | otherwise          = lockPiece state & clearFilledRows
  where
   newPosition        = (fst (piecePosition state), snd (piecePosition state) - 1)
   isNewPositionValid = canPieceMoveTo (piece state) newPosition (well state) (options state)
@@ -232,6 +233,30 @@ rotatePieceClockwise (Piece positions color) = Piece (map (\(x, y) -> (y, -x)) p
 rotatePieceCounterClockwise :: Piece -> Piece
 rotatePieceCounterClockwise (Piece positions color) =
   Piece (map (\(x, y) -> (-y, x)) positions) color
+
+clearFilledRows :: State -> State
+clearFilledRows state = state { well = wellWithoutFilledRows }
+ where
+  currentWell       = well state
+  fillTarget        = options state & columns
+  filledCellsPerRow = Map.foldrWithKey
+    (\(x, y) color cellsPerRow ->
+      if color /= GLS.white then Map.insertWith (+) y 1 cellsPerRow else cellsPerRow
+    )
+    Map.empty
+    currentWell
+  filledRows = Map.filterWithKey (\y amountFilled -> amountFilled == fillTarget) filledCellsPerRow
+  highestFilledRow =  case Map.keys filledRows & Maybe.listToMaybe of 
+    Just a -> a
+    Nothing -> 0
+  amountRowsFilled = Map.size filledRows
+  newWellPart = Map.foldrWithKey
+    (\targetY amountFilled wellPart -> Map.filterWithKey (\(x, y) color -> y == targetY) currentWell
+    )
+    Map.empty
+    filledRows
+  wellWithoutFilledRows = Map.difference currentWell newWellPart
+  newWell = Map.mapKeys (\(x, y) -> if y > highestFilledRow then (x, y - (1 * amountRowsFilled)) else (x, y)) wellWithoutFilledRows
 
 startNewGame :: State -> State
 startNewGame state = (spawnNewPiece state) { gameState = Playing }
@@ -322,8 +347,10 @@ pauseOrUnpause state = case gameState state of
 handleEvent :: GLS.Event -> State -> State
 handleEvent (GLS.EventKey (GLS.Char 'n') GLS.Down _ _) state = startNewGame state
 handleEvent (GLS.EventKey (GLS.Char 'p') GLS.Down _ _) state = pauseOrUnpause state
-handleEvent (GLS.EventKey (GLS.Char 'w') GLS.Down _ _) state = applyRotation rotatePieceCounterClockwise state
-handleEvent (GLS.EventKey (GLS.Char 'x') GLS.Down _ _) state = applyRotation rotatePieceClockwise state
+handleEvent (GLS.EventKey (GLS.Char 'w') GLS.Down _ _) state =
+  applyRotation rotatePieceCounterClockwise state
+handleEvent (GLS.EventKey (GLS.Char 'x') GLS.Down _ _) state =
+  applyRotation rotatePieceClockwise state
 handleEvent (GLS.EventKey (GLS.SpecialKey GLS.KeyRight) GLS.Down _ _) state =
   state { movePieceRight = True }
 handleEvent (GLS.EventKey (GLS.SpecialKey GLS.KeyRight) GLS.Up _ _) state =
