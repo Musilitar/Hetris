@@ -199,6 +199,14 @@ applyMovement state | isNewPositionValid = state { piecePosition = newPosition }
   newPosition        = (fst (piecePosition state) + cellsToShift, snd (piecePosition state))
   isNewPositionValid = canPieceMoveTo (piece state) newPosition (well state) (options state)
 
+applyRotation :: (Piece -> Piece) -> State -> State
+applyRotation rotater state | isNewPieceValid = state { piece = newPiece }
+                            | otherwise       = state
+ where
+  newPiece        = piece state & rotater
+  isNewPieceValid = canPieceMoveTo newPiece (piecePosition state) (well state) (options state)
+
+
 maxY :: State -> Int
 maxY state = rows (options state) - 1
 
@@ -218,6 +226,12 @@ spawnNewPiece state = state { randomGenerator = (snd newRandom)
   newRandom = Random.randomR (0, 6) (randomGenerator state)
   newPiece  = randomPiece (fst newRandom)
 
+rotatePieceClockwise :: Piece -> Piece
+rotatePieceClockwise (Piece positions color) = Piece (map (\(x, y) -> (y, -x)) positions) color
+
+rotatePieceCounterClockwise :: Piece -> Piece
+rotatePieceCounterClockwise (Piece positions color) =
+  Piece (map (\(x, y) -> (-y, x)) positions) color
 
 startNewGame :: State -> State
 startNewGame state = (spawnNewPiece state) { gameState = Playing }
@@ -308,6 +322,8 @@ pauseOrUnpause state = case gameState state of
 handleEvent :: GLS.Event -> State -> State
 handleEvent (GLS.EventKey (GLS.Char 'n') GLS.Down _ _) state = startNewGame state
 handleEvent (GLS.EventKey (GLS.Char 'p') GLS.Down _ _) state = pauseOrUnpause state
+handleEvent (GLS.EventKey (GLS.Char 'w') GLS.Down _ _) state = applyRotation rotatePieceCounterClockwise state
+handleEvent (GLS.EventKey (GLS.Char 'x') GLS.Down _ _) state = applyRotation rotatePieceClockwise state
 handleEvent (GLS.EventKey (GLS.SpecialKey GLS.KeyRight) GLS.Down _ _) state =
   state { movePieceRight = True }
 handleEvent (GLS.EventKey (GLS.SpecialKey GLS.KeyRight) GLS.Up _ _) state =
