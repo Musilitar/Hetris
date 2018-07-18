@@ -4,7 +4,7 @@ import           Data.Function                            ( (&) )
 import qualified Debug.Trace                   as Trace
 import qualified System.Random                 as Random
 import qualified Data.Map.Strict               as Map
-import qualified Data.Maybe as Maybe
+import qualified Data.Maybe                    as Maybe
 import qualified Graphics.Gloss                as GLS
 import qualified Graphics.Gloss.Interface.Pure.Game
                                                as GLS
@@ -35,8 +35,11 @@ data PiecePreview
   | PreviewThree
 
 data Piece =
-  Piece [Position]
+  Piece PieceType
+        [Position]
         GLS.Color
+
+data PieceType = TetrominoI | TetrominoJ | TetrominoL | TetrominoO | TetrominoS | TetrominoT | TetrominoZ
 
 data Options = Options
   { display :: Display
@@ -159,7 +162,7 @@ advanceState state
                    }
 
 isPiecePositionValid :: Piece -> Position -> Options -> Bool
-isPiecePositionValid (Piece positions _) (wellX, wellY) options =
+isPiecePositionValid (Piece _ positions _) (wellX, wellY) options =
   map isValidPosition positions & and
  where
   xMax = columns options - 1
@@ -211,6 +214,9 @@ applyRotation rotater state | isNewPieceValid = state { piece = newPiece }
 maxY :: State -> Int
 maxY state = rows (options state) - 1
 
+centerX :: State -> Int
+centerX state = columns (options state) `quot` 2
+
 lockPiece :: State -> State
 lockPiece state
   | snd (piecePosition state) > maxY state = state { gameState = GameOver }
@@ -221,21 +227,26 @@ lockPiece state
 spawnNewPiece :: State -> State
 spawnNewPiece state = state { randomGenerator = (snd newRandom)
                             , piece           = newPiece
-                            , piecePosition   = (0, maxY state)
+                            , piecePosition   = (centerX state, maxY state)
                             }
  where
   newRandom = Random.randomR (0, 6) (randomGenerator state)
   newPiece  = randomPiece (fst newRandom)
 
 rotatePieceClockwise :: Piece -> Piece
-rotatePieceClockwise (Piece positions color) = Piece (map (\(x, y) -> (y, -x)) positions) color
+rotatePieceClockwise (Piece pieceType positions color) = case pieceType of
+  TetrominoI -> Piece pieceType (map (\(x, y) -> (y, ((x * (-1)) - 1))) positions) color
+  TetrominoO -> Piece pieceType positions color
+  _          -> Piece pieceType (map (\(x, y) -> (y, -x)) positions) color
 
 rotatePieceCounterClockwise :: Piece -> Piece
-rotatePieceCounterClockwise (Piece positions color) =
-  Piece (map (\(x, y) -> (-y, x)) positions) color
+rotatePieceCounterClockwise (Piece pieceType positions color) = case pieceType of
+  TetrominoI -> Piece pieceType (map (\(x, y) -> ((y * (-1)) - 1, x)) positions) color
+  TetrominoO -> Piece pieceType positions color
+  _          -> Piece pieceType (map (\(x, y) -> (-y, x)) positions) color
 
 clearFilledRows :: State -> State
-clearFilledRows state = state { well = wellWithoutFilledRows }
+clearFilledRows state = state { well = newWell }
  where
   currentWell       = well state
   fillTarget        = options state & columns
@@ -246,29 +257,33 @@ clearFilledRows state = state { well = wellWithoutFilledRows }
     Map.empty
     currentWell
   filledRows = Map.filterWithKey (\y amountFilled -> amountFilled == fillTarget) filledCellsPerRow
-  highestFilledRow =  case Map.keys filledRows & Maybe.listToMaybe of 
-    Just a -> a
+  highestFilledRow = case Map.keys filledRows & reverse & Maybe.listToMaybe of
+    Just a  -> a
     Nothing -> 0
   amountRowsFilled = Map.size filledRows
-  newWellPart = Map.foldrWithKey
+  newWellPart      = Map.foldrWithKey
     (\targetY amountFilled wellPart -> Map.filterWithKey (\(x, y) color -> y == targetY) currentWell
     )
     Map.empty
     filledRows
   wellWithoutFilledRows = Map.difference currentWell newWellPart
-  newWell = Map.mapKeys (\(x, y) -> if y > highestFilledRow then (x, y - (1 * amountRowsFilled)) else (x, y)) wellWithoutFilledRows
+  newWell               = Map.mapKeys
+    (\(x, y) -> if y > highestFilledRow then (x, y - (1 * amountRowsFilled)) else (x, y))
+    wellWithoutFilledRows
 
 startNewGame :: State -> State
-startNewGame state = (spawnNewPiece state) { gameState = Playing }
+startNewGame state =
+  (spawnNewPiece state) { well = emptyWell (options state), gameState = Playing }
 
 addPieceAtPositionToWell :: Piece -> Position -> Well -> Well
-addPieceAtPositionToWell (Piece positions color) (wellX, wellY) well = Map.union newPieceWell well
+addPieceAtPositionToWell (Piece _ positions color) (wellX, wellY) well = Map.union newPieceWell
+                                                                                   well
  where
   newPieceWell =
     map (\(pieceX, pieceY) -> ((pieceX + wellX, pieceY + wellY), color)) positions & Map.fromList
 
 pieceAtPositionToWellPart :: Piece -> Position -> Well
-pieceAtPositionToWellPart (Piece positions color) (wellX, wellY) = wellPart
+pieceAtPositionToWellPart (Piece _ positions color) (wellX, wellY) = wellPart
  where
   wellPart =
     map (\(pieceX, pieceY) -> ((pieceX + wellX, pieceY + wellY), color)) positions & Map.fromList
@@ -317,8 +332,8 @@ render :: State -> GLS.Picture
 render state = case gameState state of
   NotStarted -> GLS.pictures [wellBorder, wellCells]
   Playing    -> GLS.pictures [wellBorder, wellCells, activePiece]
-  Paused     -> GLS.pictures [wellBorder, wellCells, activePiece]
-  GameOver   -> GLS.pictures [wellBorder, wellCells, activePiece]
+  Paused     -> GLS.pictures [wellBorder, wellCells, activePiece, pausedOverlay]
+  GameOver   -> GLS.pictures [wellBorder, wellCells, activePiece, gameOverOverlay]
  where
   wellBorder = drawRectangle (wellWidth + border) (wellHeight + border) 0 0 (GLS.greyN 0.25)
   wellCells  = GLS.pictures
@@ -327,6 +342,8 @@ render state = case gameState state of
     ]
   activePiece =
     renderWell wellWithActivePiece cellSize wellWidth wellHeight (showGrid currentOptions)
+  pausedOverlay        = drawRectangle wellWidth wellHeight 0 0 (GLS.greyN 0.25 & GLS.withAlpha 0.5)
+  gameOverOverlay      = drawRectangle wellWidth wellHeight 0 0 (GLS.red & GLS.withAlpha 0.5)
   currentResolution    = resolution state
   currentOptions       = options state
   resolutionHorizontal = fst currentResolution & realToFrac
@@ -376,22 +393,22 @@ randomPiece random = case random of
   6 -> tetrominoZ
 
 tetrominoI :: Piece
-tetrominoI = Piece [(0, 0), (1, 0), (2, 0), (3, 0)] GLS.cyan
+tetrominoI = Piece TetrominoI [(-2, 0), (-1, 0), (0, 0), (1, 0)] GLS.cyan
 
 tetrominoJ :: Piece
-tetrominoJ = Piece [(0, 0), (0, -1), (1, -1), (2, -1)] GLS.blue
+tetrominoJ = Piece TetrominoJ [(-1, 1), (-1, 0), (0, 0), (1, 0)] GLS.blue
 
 tetrominoL :: Piece
-tetrominoL = Piece [(2, 0), (0, -1), (1, -1), (2, -1)] GLS.orange
+tetrominoL = Piece TetrominoL [(-1, 0), (0, 0), (1, 0), (1, 1)] GLS.orange
 
 tetrominoO :: Piece
-tetrominoO = Piece [(0, 0), (1, 0), (0, -1), (1, -1)] GLS.yellow
+tetrominoO = Piece TetrominoO [(-1, 1), (-1, 0), (0, 1), (0, 0)] GLS.yellow
 
 tetrominoS :: Piece
-tetrominoS = Piece [(1, 0), (2, 0), (0, -1), (1, -1)] GLS.green
+tetrominoS = Piece TetrominoS [(-1, 0), (0, 0), (0, 1), (1, 1)] GLS.green
 
 tetrominoT :: Piece
-tetrominoT = Piece [(1, 0), (0, -1), (1, -1), (2, -1)] GLS.magenta
+tetrominoT = Piece TetrominoT [(-1, 0), (0, 1), (0, 0), (1, 0)] GLS.magenta
 
 tetrominoZ :: Piece
-tetrominoZ = Piece [(0, 0), (1, 0), (1, -1), (2, -1)] GLS.red
+tetrominoZ = Piece TetrominoZ [(-1, 1), (0, 1), (0, 0), (1, 0)] GLS.red
