@@ -4,8 +4,6 @@ import           Data.Function                            ( (&) )
 import qualified Graphics.Gloss                as GLS
 import qualified Data.Map.Strict               as Map
 
--- TYPES
-
 type Resolution = (Int, Int)
 
 type Position = (Int, Int)

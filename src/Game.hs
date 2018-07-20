@@ -11,7 +11,7 @@ import qualified Graphics.Gloss.Interface.Pure.Game
 import           State
 import           Tetris
 
--- DEFINITIONS
+-- GRAVITY & MOVEMENT
 
 actualGravity :: State -> Float
 actualGravity state
@@ -62,7 +62,7 @@ handleEvent (GLS.EventKey (GLS.SpecialKey GLS.KeyLeft) GLS.Up _ _) state =
     state { movePieceLeft = False }
 handleEvent _ state = state
 
--- GAME
+-- GAME MANAGEMENT
 
 startNewGame :: State -> State
 startNewGame state =
@@ -114,7 +114,7 @@ applyRotation rotater state | isNewPieceValid = state { piece = newPiece }
     newPiece        = piece state & rotater
     isNewPieceValid = canPieceMoveTo newPiece (piecePosition state) (well state) (options state)
 
--- PIECES
+-- PIECE MANAGEMENT
 
 lockPiece :: State -> State
 lockPiece state
