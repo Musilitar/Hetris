@@ -165,13 +165,11 @@ isPiecePositionValid :: Piece -> Position -> Options -> Bool
 isPiecePositionValid (Piece _ positions _) (wellX, wellY) options =
   map isValidPosition positions & and
  where
-  xMax = columns options - 1
-  yMax = rows options - 1
   isValidPosition (pieceX, pieceY) =
     (pieceX + wellX >= 0)
-      && (pieceX + wellX <= xMax)
+      && (pieceX + wellX <= maxX options)
       && (pieceY + wellY >= 0)
-      && (pieceY + wellY <= yMax)
+      && (pieceY + wellY <= maxY options)
 
 isPiecePositionColliding :: Piece -> Position -> Well -> Bool
 isPiecePositionColliding piece position well = Map.size filledCells > 0
@@ -210,16 +208,18 @@ applyRotation rotater state | isNewPieceValid = state { piece = newPiece }
   newPiece        = piece state & rotater
   isNewPieceValid = canPieceMoveTo newPiece (piecePosition state) (well state) (options state)
 
+maxX :: Options -> Int
+maxX options = columns options - 1
 
-maxY :: State -> Int
-maxY state = rows (options state) - 1
+maxY :: Options -> Int
+maxY options = rows options
 
-centerX :: State -> Int
-centerX state = columns (options state) `quot` 2
+centerX :: Options -> Int
+centerX options = columns options `quot` 2
 
 lockPiece :: State -> State
 lockPiece state
-  | snd (piecePosition state) > maxY state = state { gameState = GameOver }
+  | snd (piecePosition state) >= maxY (options state) = state { gameState = GameOver }
   | otherwise = (spawnNewPiece state)
     { well = addPieceAtPositionToWell (piece state) (piecePosition state) (well state)
     }
@@ -227,7 +227,7 @@ lockPiece state
 spawnNewPiece :: State -> State
 spawnNewPiece state = state { randomGenerator = (snd newRandom)
                             , piece           = newPiece
-                            , piecePosition   = (centerX state, maxY state)
+                            , piecePosition   = (centerX (options state), maxY (options state))
                             }
  where
   newRandom = Random.randomR (0, 6) (randomGenerator state)
@@ -313,8 +313,8 @@ renderCell position color sizeOuter wellWidth wellHeight showGrid = if showGrid
   offsetY   = snd offset
   sizeInner = sizeOuter * 0.8
 
-renderWell :: Well -> Float -> Float -> Float -> Bool -> GLS.Picture
-renderWell well cellSize wellWidth wellHeight showGrid =
+renderWell :: Well -> Float -> Float -> Float -> Options -> Bool -> GLS.Picture
+renderWell well cellSize wellWidth wellHeight options showGrid =
   Map.foldrWithKey
       (\position color pictures ->
         cellToPicture position color cellSize wellWidth wellHeight showGrid : pictures
@@ -326,7 +326,8 @@ renderWell well cellSize wellWidth wellHeight showGrid =
  where
   cellToPicture position color cellSize wellWidth wellHeight showGrid
     | color == GLS.white = GLS.pictures []
-    | otherwise          = renderCell position color cellSize wellWidth wellHeight showGrid
+    | snd position >= maxY options = GLS.pictures []
+    | otherwise = renderCell position color cellSize wellWidth wellHeight showGrid
 
 render :: State -> GLS.Picture
 render state = case gameState state of
@@ -338,10 +339,14 @@ render state = case gameState state of
   wellBorder = drawRectangle (wellWidth + border) (wellHeight + border) 0 0 (GLS.greyN 0.25)
   wellCells  = GLS.pictures
     [ drawRectangle wellWidth wellHeight 0 0 GLS.white
-    , renderWell (well state) cellSize wellWidth wellHeight (showGrid currentOptions)
+    , renderWell (well state) cellSize wellWidth wellHeight currentOptions (showGrid currentOptions)
     ]
-  activePiece =
-    renderWell wellWithActivePiece cellSize wellWidth wellHeight (showGrid currentOptions)
+  activePiece = renderWell wellWithActivePiece
+                           cellSize
+                           wellWidth
+                           wellHeight
+                           currentOptions
+                           (showGrid currentOptions)
   pausedOverlay        = drawRectangle wellWidth wellHeight 0 0 (GLS.greyN 0.25 & GLS.withAlpha 0.5)
   gameOverOverlay      = drawRectangle wellWidth wellHeight 0 0 (GLS.red & GLS.withAlpha 0.5)
   currentResolution    = resolution state
