@@ -23,6 +23,7 @@ dependencies:
 - base >= 4.8 && < 5
 - random
 - containers
+- ilist
 - gloss
 
 library:
