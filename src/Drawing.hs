@@ -314,92 +314,627 @@ alphaNumeral9 =
 
 alphaNumeralA :: AlphaNumeral
 alphaNumeralA =
-    [(0, 0), (2, 0), (0, 1), (2, 1), (0, 2), (1, 2), (2, 2), (0, 3), (2, 3), (0, 4), (1, 4), (2, 4)]
+    [ (0, 0)
+    , (4, 0)
+    , (0, 1)
+    , (4, 1)
+    , (0, 2)
+    , (4, 2)
+    , (0, 3)
+    , (4, 3)
+    , (0, 4)
+    , (1, 4)
+    , (2, 4)
+    , (3, 4)
+    , (4, 4)
+    , (0, 5)
+    , (4, 5)
+    , (0, 6)
+    , (4, 6)
+    , (0, 7)
+    , (4, 7)
+    , (0, 8)
+    , (1, 8)
+    , (2, 8)
+    , (3, 8)
+    , (4, 8)
+    ]
 
 alphaNumeralB :: AlphaNumeral
 alphaNumeralB =
-    [(0, 0), (1, 0), (2, 0), (0, 1), (2, 1), (0, 2), (1, 2), (0, 3), (2, 3), (0, 4), (1, 4), (2, 4)]
+    [ (0, 0)
+    , (1, 0)
+    , (2, 0)
+    , (3, 0)
+    , (4, 0)
+    , (1, 1)
+    , (4, 1)
+    , (1, 2)
+    , (4, 2)
+    , (1, 3)
+    , (4, 3)
+    , (1, 4)
+    , (2, 4)
+    , (3, 4)
+    , (4, 4)
+    , (1, 5)
+    , (4, 5)
+    , (1, 6)
+    , (4, 6)
+    , (1, 7)
+    , (4, 7)
+    , (0, 8)
+    , (1, 8)
+    , (2, 8)
+    , (3, 8)
+    , (4, 8)
+    ]
 
 alphaNumeralC :: AlphaNumeral
-alphaNumeralC = [(0, 0), (1, 0), (2, 0), (0, 1), (0, 2), (0, 3), (0, 4), (1, 4), (2, 4)]
+alphaNumeralC =
+    [ (0, 0)
+    , (1, 0)
+    , (2, 0)
+    , (3, 0)
+    , (4, 0)
+    , (0, 1)
+    , (0, 2)
+    , (0, 3)
+    , (0, 4)
+    , (0, 5)
+    , (0, 6)
+    , (0, 7)
+    , (0, 8)
+    , (1, 8)
+    , (2, 8)
+    , (3, 8)
+    , (4, 8)
+    ]
 
 alphaNumeralD :: AlphaNumeral
-alphaNumeralD = [(0, 0), (1, 0), (0, 1), (2, 1), (0, 2), (2, 2), (0, 3), (2, 3), (0, 4), (1, 4)]
+alphaNumeralD =
+    [ (0, 0)
+    , (1, 0)
+    , (2, 0)
+    , (3, 0)
+    , (4, 0)
+    , (1, 1)
+    , (4, 1)
+    , (1, 2)
+    , (4, 2)
+    , (1, 3)
+    , (4, 3)
+    , (1, 4)
+    , (4, 4)
+    , (1, 5)
+    , (4, 5)
+    , (1, 6)
+    , (4, 6)
+    , (1, 7)
+    , (4, 7)
+    , (0, 8)
+    , (1, 8)
+    , (2, 8)
+    , (3, 8)
+    , (4, 8)
+    ]
 
 alphaNumeralE :: AlphaNumeral
 alphaNumeralE =
-    [(0, 0), (1, 0), (2, 0), (0, 1), (0, 2), (1, 2), (2, 2), (0, 3), (0, 4), (1, 4), (2, 4)]
+    [ (0, 0)
+    , (1, 0)
+    , (2, 0)
+    , (3, 0)
+    , (4, 0)
+    , (0, 1)
+    , (0, 2)
+    , (0, 3)
+    , (0, 4)
+    , (1, 4)
+    , (2, 4)
+    , (3, 4)
+    , (4, 4)
+    , (0, 5)
+    , (0, 6)
+    , (0, 7)
+    , (0, 8)
+    , (1, 8)
+    , (2, 8)
+    , (3, 8)
+    , (4, 8)
+    ]
 
 alphaNumeralF :: AlphaNumeral
-alphaNumeralF = [(0, 0), (0, 1), (0, 2), (1, 2), (0, 3), (0, 4), (1, 4), (2, 4)]
+alphaNumeralF =
+    [ (0, 0)
+    , (0, 1)
+    , (0, 2)
+    , (0, 3)
+    , (0, 4)
+    , (1, 4)
+    , (2, 4)
+    , (0, 5)
+    , (0, 6)
+    , (0, 7)
+    , (0, 8)
+    , (1, 8)
+    , (2, 8)
+    , (3, 8)
+    , (4, 8)
+    ]
 
 alphaNumeralG :: AlphaNumeral
 alphaNumeralG =
-    [(0, 0), (1, 0), (2, 0), (0, 1), (2, 1), (0, 2), (2, 2), (0, 3), (0, 4), (1, 4), (2, 4)]
+    [ (0, 0)
+    , (1, 0)
+    , (2, 0)
+    , (3, 0)
+    , (4, 0)
+    , (0, 1)
+    , (4, 1)
+    , (0, 2)
+    , (4, 2)
+    , (0, 3)
+    , (4, 3)
+    , (0, 4)
+    , (3, 4)
+    , (4, 4)
+    , (0, 5)
+    , (0, 6)
+    , (0, 7)
+    , (0, 8)
+    , (1, 8)
+    , (2, 8)
+    , (3, 8)
+    , (4, 8)
+    ]
 
 alphaNumeralH :: AlphaNumeral
 alphaNumeralH =
-    [(0, 0), (2, 0), (0, 1), (2, 1), (0, 2), (1, 2), (2, 2), (0, 3), (2, 3), (0, 4), (2, 4)]
+    [ (0, 0)
+    , (4, 0)
+    , (0, 1)
+    , (4, 1)
+    , (0, 2)
+    , (4, 2)
+    , (0, 3)
+    , (4, 3)
+    , (0, 4)
+    , (1, 4)
+    , (2, 4)
+    , (3, 4)
+    , (4, 4)
+    , (0, 5)
+    , (4, 5)
+    , (0, 6)
+    , (4, 6)
+    , (0, 7)
+    , (4, 7)
+    , (0, 8)
+    , (4, 8)
+    ]
 
 alphaNumeralI :: AlphaNumeral
-alphaNumeralI = [(0, 0), (1, 0), (2, 0), (1, 1), (1, 2), (1, 3), (0, 4), (1, 4), (2, 4)]
+alphaNumeralI =
+    [ (0, 0)
+    , (1, 0)
+    , (2, 0)
+    , (3, 0)
+    , (4, 0)
+    , (2, 1)
+    , (2, 2)
+    , (2, 3)
+    , (2, 4)
+    , (2, 5)
+    , (2, 6)
+    , (2, 7)
+    , (0, 8)
+    , (1, 8)
+    , (2, 8)
+    , (3, 8)
+    , (4, 8)
+    ]
 
 alphaNumeralJ :: AlphaNumeral
-alphaNumeralJ = [(1, 0), (0, 1), (2, 1), (2, 2), (2, 3), (0, 4), (1, 4), (2, 4)]
+alphaNumeralJ =
+    [ (0, 0)
+    , (1, 0)
+    , (2, 0)
+    , (3, 0)
+    , (4, 0)
+    , (0, 1)
+    , (4, 1)
+    , (0, 2)
+    , (4, 2)
+    , (4, 3)
+    , (4, 4)
+    , (4, 5)
+    , (4, 6)
+    , (4, 7)
+    , (4, 8)
+    ]
 
 alphaNumeralK :: AlphaNumeral
-alphaNumeralK = [(0, 0), (2, 0), (0, 1), (2, 1), (0, 2), (1, 2), (0, 3), (2, 3), (0, 4), (2, 4)]
+alphaNumeralK =
+    [ (0, 0)
+    , (4, 0)
+    , (0, 1)
+    , (3, 1)
+    , (0, 2)
+    , (2, 2)
+    , (0, 3)
+    , (1, 3)
+    , (0, 4)
+    , (0, 5)
+    , (1, 5)
+    , (0, 6)
+    , (2, 6)
+    , (0, 7)
+    , (3, 7)
+    , (0, 8)
+    , (4, 8)
+    ]
 
 alphaNumeralL :: AlphaNumeral
-alphaNumeralL = [(0, 0), (1, 0), (2, 0), (0, 1), (0, 2), (0, 3), (0, 4)]
+alphaNumeralL =
+    [ (0, 0)
+    , (1, 0)
+    , (2, 0)
+    , (3, 0)
+    , (4, 0)
+    , (0, 1)
+    , (0, 2)
+    , (0, 3)
+    , (0, 4)
+    , (0, 5)
+    , (0, 6)
+    , (0, 7)
+    , (0, 8)
+    ]
 
 alphaNumeralM :: AlphaNumeral
 alphaNumeralM =
-    [(0, 0), (2, 0), (0, 1), (2, 1), (0, 2), (2, 2), (0, 3), (1, 3), (2, 3), (0, 4), (2, 4)]
+    [ (0, 0)
+    , (4, 0)
+    , (0, 1)
+    , (4, 1)
+    , (0, 2)
+    , (4, 2)
+    , (0, 3)
+    , (4, 3)
+    , (0, 4)
+    , (4, 4)
+    , (0, 5)
+    , (2, 5)
+    , (4, 5)
+    , (0, 6)
+    , (2, 6)
+    , (4, 6)
+    , (0, 7)
+    , (2, 7)
+    , (4, 7)
+    , (0, 8)
+    , (1, 8)
+    , (2, 8)
+    , (3, 8)
+    , (4, 8)
+    ]
 
 alphaNumeralN :: AlphaNumeral
 alphaNumeralN =
-    [(0, 0), (2, 0), (0, 1), (2, 1), (0, 2), (2, 2), (0, 3), (2, 3), (0, 4), (1, 4), (2, 4)]
+    [ (0, 0)
+    , (4, 0)
+    , (0, 1)
+    , (4, 1)
+    , (0, 2)
+    , (4, 2)
+    , (0, 3)
+    , (4, 3)
+    , (0, 4)
+    , (4, 4)
+    , (0, 5)
+    , (4, 5)
+    , (0, 6)
+    , (4, 6)
+    , (0, 7)
+    , (4, 7)
+    , (0, 8)
+    , (1, 8)
+    , (2, 8)
+    , (3, 8)
+    , (4, 8)
+    ]
 
 alphaNumeralO :: AlphaNumeral
-alphaNumeralO = [(1, 0), (0, 1), (2, 1), (0, 2), (2, 2), (0, 3), (2, 3), (1, 4)]
+alphaNumeralO =
+    [ (0, 0)
+    , (1, 0)
+    , (2, 0)
+    , (3, 0)
+    , (4, 0)
+    , (0, 1)
+    , (4, 1)
+    , (0, 2)
+    , (4, 2)
+    , (0, 3)
+    , (4, 3)
+    , (0, 4)
+    , (4, 4)
+    , (0, 5)
+    , (4, 5)
+    , (0, 6)
+    , (4, 6)
+    , (0, 7)
+    , (4, 7)
+    , (0, 8)
+    , (1, 8)
+    , (2, 8)
+    , (3, 8)
+    , (4, 8)
+    ]
 
 alphaNumeralP :: AlphaNumeral
-alphaNumeralP = [(0, 0), (0, 1), (0, 2), (1, 2), (2, 2), (0, 3), (2, 3), (0, 4), (1, 4), (2, 4)]
+alphaNumeralP =
+    [ (0, 0)
+    , (0, 1)
+    , (0, 2)
+    , (0, 3)
+    , (0, 4)
+    , (1, 4)
+    , (2, 4)
+    , (3, 4)
+    , (4, 4)
+    , (0, 5)
+    , (4, 5)
+    , (0, 6)
+    , (4, 6)
+    , (0, 7)
+    , (4, 7)
+    , (0, 8)
+    , (1, 8)
+    , (2, 8)
+    , (3, 8)
+    , (4, 8)
+    ]
 
 alphaNumeralQ :: AlphaNumeral
 alphaNumeralQ =
-    [(1, 0), (0, 1), (1, 1), (2, 1), (0, 2), (2, 2), (0, 3), (2, 3), (0, 4), (1, 4), (2, 4)]
+    [ (2, 0)
+    , (2, 1)
+    , (0, 2)
+    , (1, 2)
+    , (2, 2)
+    , (3, 2)
+    , (4, 2)
+    , (0, 3)
+    , (4, 3)
+    , (0, 4)
+    , (4, 4)
+    , (0, 5)
+    , (4, 5)
+    , (0, 6)
+    , (4, 6)
+    , (0, 7)
+    , (4, 7)
+    , (0, 8)
+    , (1, 8)
+    , (2, 8)
+    , (3, 8)
+    , (4, 8)
+    ]
 
 alphaNumeralR :: AlphaNumeral
 alphaNumeralR =
-    [(0, 0), (2, 0), (0, 1), (2, 1), (0, 2), (1, 2), (0, 3), (2, 3), (0, 4), (1, 4), (2, 4)]
+    [ (0, 0)
+    , (4, 0)
+    , (0, 1)
+    , (3, 1)
+    , (0, 2)
+    , (2, 2)
+    , (0, 3)
+    , (1, 3)
+    , (0, 4)
+    , (1, 4)
+    , (2, 4)
+    , (3, 4)
+    , (4, 4)
+    , (0, 5)
+    , (4, 5)
+    , (0, 6)
+    , (4, 6)
+    , (0, 7)
+    , (4, 7)
+    , (0, 8)
+    , (1, 8)
+    , (2, 8)
+    , (3, 8)
+    , (4, 8)
+    ]
 
 alphaNumeralS :: AlphaNumeral
-alphaNumeralS = [(0, 0), (1, 0), (2, 1), (0, 2), (1, 2), (0, 3), (2, 3), (1, 4)]
+alphaNumeralS =
+    [ (0, 0)
+    , (1, 0)
+    , (2, 0)
+    , (3, 0)
+    , (4, 0)
+    , (0, 1)
+    , (4, 1)
+    , (4, 2)
+    , (4, 3)
+    , (0, 4)
+    , (1, 4)
+    , (2, 4)
+    , (3, 4)
+    , (4, 4)
+    , (0, 5)
+    , (0, 6)
+    , (0, 7)
+    , (4, 7)
+    , (0, 8)
+    , (1, 8)
+    , (2, 8)
+    , (3, 8)
+    , (4, 8)
+    ]
 
 alphaNumeralT :: AlphaNumeral
-alphaNumeralT = [(1, 0), (1, 1), (1, 2), (1, 3), (0, 4), (1, 4), (2, 4)]
+alphaNumeralT =
+    [ (2, 0)
+    , (2, 1)
+    , (2, 2)
+    , (2, 3)
+    , (2, 4)
+    , (2, 5)
+    , (2, 6)
+    , (2, 7)
+    , (0, 8)
+    , (1, 8)
+    , (2, 8)
+    , (3, 8)
+    , (4, 8)
+    ]
 
 alphaNumeralU :: AlphaNumeral
 alphaNumeralU =
-    [(0, 0), (1, 0), (2, 0), (0, 1), (2, 1), (0, 2), (2, 2), (0, 3), (2, 3), (0, 4), (2, 4)]
+    [ (0, 0)
+    , (1, 0)
+    , (2, 0)
+    , (3, 0)
+    , (4, 0)
+    , (0, 1)
+    , (4, 1)
+    , (0, 2)
+    , (4, 2)
+    , (0, 3)
+    , (4, 3)
+    , (0, 4)
+    , (4, 4)
+    , (0, 5)
+    , (4, 5)
+    , (0, 6)
+    , (4, 6)
+    , (0, 7)
+    , (4, 7)
+    , (0, 8)
+    , (4, 8)
+    ]
 
 alphaNumeralV :: AlphaNumeral
-alphaNumeralV = [(1, 0), (0, 1), (2, 1), (0, 2), (2, 2), (0, 3), (2, 3), (0, 4), (2, 4)]
+alphaNumeralV =
+    [ (1, 0)
+    , (2, 0)
+    , (3, 0)
+    , (1, 1)
+    , (3, 1)
+    , (1, 2)
+    , (3, 2)
+    , (1, 3)
+    , (3, 3)
+    , (1, 4)
+    , (3, 4)
+    , (1, 5)
+    , (3, 5)
+    , (1, 6)
+    , (3, 6)
+    , (1, 7)
+    , (3, 7)
+    , (0, 8)
+    , (1, 8)
+    , (3, 8)
+    , (4, 8)
+    ]
 
 alphaNumeralW :: AlphaNumeral
 alphaNumeralW =
-    [(0, 0), (2, 0), (0, 1), (1, 1), (2, 1), (0, 2), (2, 2), (0, 3), (2, 3), (0, 4), (2, 4)]
+    [ (0, 0)
+    , (1, 0)
+    , (2, 0)
+    , (3, 0)
+    , (4, 0)
+    , (0, 1)
+    , (2, 1)
+    , (4, 1)
+    , (0, 2)
+    , (2, 2)
+    , (4, 2)
+    , (0, 3)
+    , (2, 3)
+    , (4, 3)
+    , (0, 4)
+    , (4, 4)
+    , (0, 5)
+    , (4, 5)
+    , (0, 6)
+    , (4, 6)
+    , (0, 7)
+    , (4, 7)
+    , (0, 8)
+    , (4, 8)
+    ]
 
 alphaNumeralX :: AlphaNumeral
-alphaNumeralX = [(0, 0), (2, 0), (0, 1), (2, 1), (1, 2), (0, 3), (2, 3), (0, 4), (2, 4)]
+alphaNumeralX =
+    [ (0, 0)
+    , (4, 0)
+    , (0, 1)
+    , (4, 1)
+    , (0, 2)
+    , (4, 2)
+    , (1, 3)
+    , (3, 3)
+    , (2, 4)
+    , (1, 5)
+    , (3, 5)
+    , (0, 6)
+    , (4, 6)
+    , (0, 7)
+    , (4, 7)
+    , (0, 8)
+    , (4, 8)
+    ]
 
 alphaNumeralY :: AlphaNumeral
-alphaNumeralY = [(1, 0), (1, 1), (0, 2), (1, 2), (2, 2), (0, 3), (2, 3), (0, 4), (2, 4)]
+alphaNumeralY =
+    [ (2, 0)
+    , (2, 1)
+    , (2, 2)
+    , (2, 3)
+    , (0, 4)
+    , (1, 4)
+    , (2, 4)
+    , (3, 4)
+    , (4, 4)
+    , (0, 5)
+    , (4, 5)
+    , (0, 6)
+    , (4, 6)
+    , (0, 7)
+    , (4, 7)
+    , (0, 8)
+    , (4, 8)
+    ]
 
 alphaNumeralZ :: AlphaNumeral
-alphaNumeralZ = [(0, 0), (1, 0), (2, 0), (0, 1), (1, 2), (2, 3), (0, 4), (1, 4), (2, 4)]
+alphaNumeralZ =
+    [ (0, 0)
+    , (1, 0)
+    , (2, 0)
+    , (3, 0)
+    , (4, 0)
+    , (0, 1)
+    , (0, 2)
+    , (1, 3)
+    , (2, 4)
+    , (3, 5)
+    , (4, 6)
+    , (4, 7)
+    , (0, 8)
+    , (1, 8)
+    , (2, 8)
+    , (3, 8)
+    , (4, 8)
+    ]
 
 -- POSITIONS & PIXELS
 
@@ -495,19 +1030,35 @@ renderWellCell position color sizeOuter wellWidth wellHeight showGrid = if showG
     sizeInner = sizeOuter * 0.8
 
 renderInterface :: State -> Float -> Float -> Float -> Float -> GLS.Picture
-renderInterface state wellWidth wellHeight border fontSize = GLS.pictures [scorePictures]
+renderInterface state wellWidth wellHeight border fontSize = GLS.pictures
+    [scorePictures, optionShowGridPictures0, optionShowGridPictures1, optionShowGridPictures2]
   where
-    stringToPicture offsetCalculator index character = renderAlphaNumeral character
-                                                                          offset
-                                                                          GLS.white
-                                                                          fontSize
-        where offset = offsetCalculator (realToFrac index * fontSize)
-    scoreOffset inlineOffset = ((wellWidth / 2.0) + border + inlineOffset, wellHeight / 2.0)
-    scorePictures = LI.imap (stringToPicture scoreOffset) (score state & show) & GLS.pictures
-    optionShowGridOffset inlineOffset =
-        ((wellWidth / 2.0) + border + inlineOffset, (wellHeight / 2.0) - (border * 1))
-    {-optionShowGridPictures =
-        LI.imap (stringToPicture optionShowGridOffset) "SHOW GRID" & GLS.pictures-}
+    stringToPicture baseOffsetX offsetY index character = renderAlphaNumeral character
+                                                                             offset
+                                                                             GLS.white
+                                                                             fontSize
+      where
+        inlineOffset = realToFrac index * ((fontSize * 0.55) + 3.75)
+        offset       = (baseOffsetX + inlineOffset, offsetY)
+    scorePictures =
+        LI.imap (stringToPicture ((wellWidth / 2.0) + border) (wellHeight / 2.0))
+                (score state & show)
+            & GLS.pictures
+    optionShowGridPictures0 =
+        LI.imap
+                (stringToPicture ((wellWidth / 2.0) + border) ((wellHeight / 2.0) - (border * 1)))
+                "SHOW PIECE SHADOW"
+            & GLS.pictures
+    optionShowGridPictures1 =
+        LI.imap
+                (stringToPicture ((wellWidth / 2.0) + border) ((wellHeight / 2.0) - (border * 2)))
+                "SHOW GRID"
+            & GLS.pictures
+    optionShowGridPictures2 =
+        LI.imap
+                (stringToPicture ((wellWidth / 2.0) + border) ((wellHeight / 2.0) - (border * 3)))
+                "ALLOW INSTANT DROP"
+            & GLS.pictures
 
 renderAlphaNumeral :: Char -> Offset -> GLS.Color -> Float -> GLS.Picture
 renderAlphaNumeral character offset color size =
@@ -556,6 +1107,7 @@ renderAlphaNumeral character offset color size =
         'X' -> alphaNumeralX
         'Y' -> alphaNumeralY
         'Z' -> alphaNumeralZ
+        ' ' -> []
         _   -> alphaNumeralUnknown
 
 renderAlphaNumeralCell :: Offset -> Position -> GLS.Color -> Float -> GLS.Picture

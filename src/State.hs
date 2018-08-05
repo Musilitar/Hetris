@@ -36,7 +36,7 @@ initialState :: Random.StdGen -> State
 initialState randomGenerator = State
     { resolution            = (1280, 720)
     , options               = defaultOptions
-    , score                 = 0
+    , score                 = 1234567890
     , well                  = emptyWell defaultOptions
     , randomGenerator       = randomGenerator
     , time                  = 0
