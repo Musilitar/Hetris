@@ -42,6 +42,7 @@ handleFrame newTime state = case gameState state of
                      }
 
 handleEvent :: GLS.Event -> State -> State
+handleEvent (GLS.EventKey (GLS.Char '1') GLS.Down _ _) state = state
 handleEvent (GLS.EventKey (GLS.Char 'n') GLS.Down _ _) state = startNewGame state
 handleEvent (GLS.EventKey (GLS.Char 'p') GLS.Down _ _) state = pauseOrUnpause state
 handleEvent (GLS.EventKey (GLS.Char 'w') GLS.Down _ _) state =
