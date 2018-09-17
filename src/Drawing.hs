@@ -66,10 +66,12 @@ drawToggleBox :: Bool -> Float -> Float -> Float -> Float -> Float -> GLS.Pictur
 drawToggleBox isOn boxWidth boxHeight onOffsetX offOffsetX offsetY = GLS.pictures [box, indicator]
   where
     indicatorSize    = boxHeight
-    indicatorOffsetX = if isOn then onOffsetX else offOffsetX
-    color            = if isOn then GLS.green else GLS.red
-    box              = drawRectangle boxWidth boxHeight onOffsetX offsetY color
-    indicator        = drawRectangle indicatorSize indicatorSize indicatorOffsetX offsetY GLS.white
+    indicatorOffsetX = if isOn
+        then onOffsetX - (boxWidth / 2.0) + (indicatorSize / 2.0)
+        else offOffsetX - (indicatorSize / 2.0)
+    color     = if isOn then GLS.green else GLS.red
+    box       = drawRectangle boxWidth boxHeight onOffsetX offsetY color
+    indicator = drawRectangle indicatorSize indicatorSize indicatorOffsetX offsetY GLS.white
 
 -- RENDERING
 
@@ -148,16 +150,22 @@ renderWellCell position color sizeOuter wellWidth wellHeight showGrid = if showG
 
 renderInterface :: State -> Float -> Float -> Float -> Float -> Float -> Float -> GLS.Picture
 renderInterface state horizontalResolution verticalResolution wellWidth wellHeight border fontSize
-    = GLS.pictures [scorePictures, optionShowGridPictures]
+    = GLS.pictures [scorePictures, optionShowGridPictures, optionAllowInstantDropPictures]
   where
     scorePictures =
         drawString (score state & show) fontSize ((wellWidth / 2.0) + border) (wellHeight / 2.0)
-    optionShowGridPictures = drawOption (showGrid (options state))
-                                        "SHOW GRID"
+    optionShowGridPictures = drawOption (options state & showGrid)
+                                        "SHOW GRID            = 1"
                                         fontSize
                                         ((wellWidth / 2.0) + border)
                                         ((horizontalResolution / 2.0) - border)
                                         ((wellHeight / 2.0) - (border * 2))
+    optionAllowInstantDropPictures = drawOption (options state & allowInstantDrop)
+                                                "ALLOW INSTANT DROP   = 2"
+                                                fontSize
+                                                ((wellWidth / 2.0) + border)
+                                                ((horizontalResolution / 2.0) - border)
+                                                ((wellHeight / 2.0) - (border * 3))
 
 renderAlphaNumeral :: Char -> Offset -> GLS.Color -> Float -> GLS.Picture
 renderAlphaNumeral character offset color size =
@@ -207,6 +215,7 @@ renderAlphaNumeral character offset color size =
         'Y' -> alphaNumeralY
         'Z' -> alphaNumeralZ
         ' ' -> []
+        '=' -> alphaNumeralEquals
         _   -> alphaNumeralUnknown
 
 renderAlphaNumeralCell :: Offset -> Position -> GLS.Color -> Float -> GLS.Picture

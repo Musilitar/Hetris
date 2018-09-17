@@ -42,7 +42,11 @@ handleFrame newTime state = case gameState state of
                      }
 
 handleEvent :: GLS.Event -> State -> State
-handleEvent (GLS.EventKey (GLS.Char '1') GLS.Down _ _) state = state
+handleEvent (GLS.EventKey (GLS.Char '1') GLS.Down _ _) state =
+    state { options = (options state) { showGrid = options state & showGrid & not } }
+handleEvent (GLS.EventKey (GLS.Char '2') GLS.Down _ _) state = state
+    { options = (options state) { allowInstantDrop = options state & allowInstantDrop & not }
+    }
 handleEvent (GLS.EventKey (GLS.Char 'n') GLS.Down _ _) state = startNewGame state
 handleEvent (GLS.EventKey (GLS.Char 'p') GLS.Down _ _) state = pauseOrUnpause state
 handleEvent (GLS.EventKey (GLS.Char 'w') GLS.Down _ _) state =
